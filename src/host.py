@@ -1,31 +1,19 @@
-import sys
-import json
-import struct
+import os
 import subprocess
 
-def send_message(message):
-    content = json.dumps(message).encode('utf-8')
-    sys.stdout.buffer.write(struct.pack('I', len(content)))
-    sys.stdout.buffer.write(content)
-    sys.stdout.buffer.flush()
+# Define your "Master" directory
+BASE_DIR = os.path.expanduser("~/.githui-repos")
+if not os.path.exists(BASE_DIR):
+    os.makedirs(BASE_DIR)
 
-def handle_message():
-    while True:
-        # Read message length
-        raw_length = sys.stdin.buffer.read(4)
-        if not raw_length: break
-        length = struct.unpack('I', raw_length)[0]
-        
-        # Read message
-        message = json.loads(sys.stdin.buffer.read(length).decode('utf-8'))
-        
-        if message.get("action") == "commit":
-            try:
-                # You'd need logic to know WHICH directory to run this in
-                subprocess.run(["git", "commit", "-m", message["msg"]], check=True)
-                send_message({"status": "success"})
-            except Exception as e:
-                send_message({"status": "error", "error": str(e)})
-
-if __name__ == "__main__":
-    handle_message()
+def handle_sync(repo_name, clone_url):
+    repo_path = os.path.join(BASE_DIR, repo_name)
+    
+    if os.path.exists(repo_path):
+        # Already exists, just pull updates
+        subprocess.run(["git", "-C", repo_path, "pull"], check=True)
+        return {"status": "synced", "path": repo_path}
+    else:
+        # Clone it for the first time
+        subprocess.run(["git", "clone", clone_url, repo_path], check=True)
+        return {"status": "cloned", "path": repo_path}
