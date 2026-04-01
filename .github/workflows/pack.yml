@@ -14,21 +14,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Debug - List Files
+        run: ls -R
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-code: '20'
+          node-version: '20'
 
       - name: Install web-ext
         run: npm install --global web-ext
 
       - name: Lint Extension
-        run: web-ext lint --source-dir ./extension # Adjust path if your manifest isn't in root
+        # Use "." if your manifest.json is in the root of the repo
+        run: web-ext lint --source-dir .
 
       - name: Build Extension Package
         run: |
           mkdir -p build
-          web-ext build --source-dir ./extension --artifacts-dir ./build --overwrite-dest
+          # Using "." here too to pack the root files
+          web-ext build --source-dir . --artifacts-dir ./build --overwrite-dest
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
