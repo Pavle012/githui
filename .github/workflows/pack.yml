@@ -3,8 +3,6 @@ name: Pack Extension
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   build:
@@ -14,8 +12,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Debug - List Files
-        run: ls -R
+      - name: Find Manifest Directory
+        # This finds the directory containing manifest.json, even if it's nested
+        run: |
+          MANIFEST_PATH=$(find . -name "manifest.json" -printf '%h\n' | head -n 1)
+          echo "MANIFEST_DIR=$MANIFEST_PATH" >> $GITHUB_ENV
+          echo "Found manifest in: $MANIFEST_PATH"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -25,15 +27,12 @@ jobs:
       - name: Install web-ext
         run: npm install --global web-ext
 
-      - name: Lint Extension
-        # Use "." if your manifest.json is in the root of the repo
-        run: web-ext lint --source-dir .
-
-      - name: Build Extension Package
+      - name: Lint and Build Extension
         run: |
+          # Use the directory we found dynamically
+          web-ext lint --source-dir ${{ env.MANIFEST_DIR }}
           mkdir -p build
-          # Using "." here too to pack the root files
-          web-ext build --source-dir . --artifacts-dir ./build --overwrite-dest
+          web-ext build --source-dir ${{ env.MANIFEST_DIR }} --artifacts-dir ./build --overwrite-dest
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
