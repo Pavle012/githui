@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+  "name": "GitHUI Extension",
+  "version": "1.0",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "githui@pavle012.github.io"
+    }
+  },
+  "permissions": ["nativeMessaging", "https://github.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*"],
+      "js": ["content.js"]
+    }
+  ]
+}
